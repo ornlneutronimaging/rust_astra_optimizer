@@ -438,6 +438,29 @@ impl OptimizerApp {
                 }
                 self.save_status = Some(result);
             }
+            if ui
+                .add_enabled(
+                    self.stack.is_some() && !busy,
+                    egui::Button::new("↩ Return to the main application"),
+                )
+                .on_hover_text(
+                    "saves the parameters into the HDF5 and closes this tool",
+                )
+                .clicked()
+            {
+                let path = self.stack.as_ref().expect("checked").path.clone();
+                let result = save_params(&path, &self.params).map(|()| {
+                    format!("{CONFIG_NAME} saved into {}", path.display())
+                });
+                if result.is_ok() && self.called_from_app {
+                    println!("{}", self.params.to_json());
+                }
+                let close = result.is_ok();
+                self.save_status = Some(result);
+                if close {
+                    ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close);
+                }
+            }
         });
         match &self.save_status {
             Some(Ok(msg)) => {
