@@ -9,6 +9,7 @@ ct_reconstruction = { path = "../rust_ct_reconstruction" }
 eframe = "0.35"
 egui = "0.35"
 hdf5-metno = "0.10"
+image = { version = "0.25", default-features = false, features = ["png"] }
 rfd = "0.17"
 serde_json = "1.0"
 sha2 = "0.10"

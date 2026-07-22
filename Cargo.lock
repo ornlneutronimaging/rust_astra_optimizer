@@ -260,6 +260,7 @@ dependencies = [
  "eframe",
  "egui",
  "hdf5-metno",
+ "image",
  "rfd",
  "serde_json",
  "sha2",

@@ -15,6 +15,22 @@ use std::time::Duration;
 const ADVANCED_PASSWORD_SHA256: &str =
     "b8b22aedc372aa891df895be9a7626e6d9ddc6d39ba85d202ca68de8c52ad782";
 
+/// Imaging team logo (same asset and placement as the other rust
+/// applications) and the ASTRA toolbox logo, both embedded in the binary
+/// and shown at the right end of the toolbar.
+const IMAGING_LOGO_BYTES: &[u8] = include_bytes!("../logos/ImagingLogo.png");
+const ASTRA_LOGO_BYTES: &[u8] = include_bytes!("../logos/astra_logo.png");
+const LOGO_MAX_HEIGHT: f32 = 36.0;
+
+fn load_logo(ctx: &egui::Context, name: &str, bytes: &[u8]) -> Option<egui::TextureHandle> {
+    let img = image::load_from_memory(bytes).ok()?;
+    let rgba = img.to_rgba8();
+    let size = [rgba.width() as usize, rgba.height() as usize];
+    let pixels = rgba.into_raw();
+    let color_image = egui::ColorImage::from_rgba_unmultiplied(size, &pixels);
+    Some(ctx.load_texture(name, color_image, egui::TextureOptions::LINEAR))
+}
+
 fn password_matches(input: &str) -> bool {
     let digest = Sha256::digest(input.as_bytes());
     let hex: String = digest.iter().map(|b| format!("{b:02x}")).collect();
@@ -65,6 +81,9 @@ pub struct OptimizerApp {
     // Saving into the HDF5.
     save_status: Option<Result<String, String>>,
 
+    /// Imaging team + tool logos, loaded into textures on the first frame.
+    logo_tex: Option<Vec<egui::TextureHandle>>,
+
     status: String,
 }
 
@@ -89,6 +108,7 @@ impl OptimizerApp {
             recon_error: None,
             history: Vec::new(),
             save_status: None,
+            logo_tex: None,
             status: "Open a pre-processed checkpoint HDF5 to begin.".to_owned(),
         };
         if let Some(path) = input {
@@ -570,6 +590,20 @@ impl eframe::App for OptimizerApp {
                     }
                 }
                 ui.label(RichText::new(&self.status).weak());
+                let logos = self.logo_tex.get_or_insert_with(|| {
+                    [
+                        ("imaging_logo", IMAGING_LOGO_BYTES),
+                        ("astra_logo", ASTRA_LOGO_BYTES),
+                    ]
+                    .into_iter()
+                    .filter_map(|(name, bytes)| load_logo(&ctx, name, bytes))
+                    .collect()
+                });
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                    for tex in logos.iter() {
+                        ui.add(egui::Image::from_texture(tex).max_height(LOGO_MAX_HEIGHT));
+                    }
+                });
             });
         });
         egui::CentralPanel::default().show(ui, |ui| {
