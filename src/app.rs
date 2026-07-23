@@ -401,11 +401,16 @@ impl OptimizerApp {
 
         let busy = self.recon_job.is_some();
         ui.horizontal(|ui| {
+            let evaluate = egui::Button::new(
+                RichText::new("▶ Evaluate the reconstruction of the selected slices")
+                    .size(16.0)
+                    .strong()
+                    .color(Color32::WHITE),
+            )
+            .fill(Color32::from_rgb(230, 126, 0))
+            .min_size(egui::vec2(0.0, 36.0));
             if ui
-                .add_enabled(
-                    self.stack.is_some() && !busy,
-                    egui::Button::new("▶ Evaluate the reconstruction of the selected slices"),
-                )
+                .add_enabled(self.stack.is_some() && !busy, evaluate)
                 .clicked()
             {
                 let stack = self.stack.clone().expect("checked above");
@@ -418,59 +423,7 @@ impl OptimizerApp {
                     self.params,
                 ));
             }
-            if ui
-                .add_enabled(
-                    self.stack.is_some() && !busy,
-                    egui::Button::new("💾 Save the parameters into the HDF5"),
-                )
-                .on_hover_text(
-                    "writes astra_fbp_config into the checkpoint so later reconstructions \
-                     use these parameters",
-                )
-                .clicked()
-            {
-                let path = self.stack.as_ref().expect("checked").path.clone();
-                let result = save_params(&path, &self.params).map(|()| {
-                    format!("{CONFIG_NAME} saved into {}", path.display())
-                });
-                if result.is_ok() && self.called_from_app {
-                    println!("{}", self.params.to_json());
-                }
-                self.save_status = Some(result);
-            }
-            if ui
-                .add_enabled(
-                    self.stack.is_some() && !busy,
-                    egui::Button::new("↩ Return to the main application"),
-                )
-                .on_hover_text(
-                    "saves the parameters into the HDF5 and closes this tool",
-                )
-                .clicked()
-            {
-                let path = self.stack.as_ref().expect("checked").path.clone();
-                let result = save_params(&path, &self.params).map(|()| {
-                    format!("{CONFIG_NAME} saved into {}", path.display())
-                });
-                if result.is_ok() && self.called_from_app {
-                    println!("{}", self.params.to_json());
-                }
-                let close = result.is_ok();
-                self.save_status = Some(result);
-                if close {
-                    ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close);
-                }
-            }
         });
-        match &self.save_status {
-            Some(Ok(msg)) => {
-                ui.colored_label(Color32::from_rgb(120, 200, 120), msg);
-            }
-            Some(Err(e)) => {
-                ui.colored_label(Color32::LIGHT_RED, e);
-            }
-            None => {}
-        }
         if let Some(e) = &self.recon_error {
             ui.colored_label(Color32::LIGHT_RED, e);
         }
@@ -574,6 +527,20 @@ impl OptimizerApp {
                 });
         }
     }
+
+    /// Save the parameters into the checkpoint, record the outcome in
+    /// `save_status`, and report success.
+    fn save_params_and_report(&mut self) -> bool {
+        let path = self.stack.as_ref().expect("stack checked").path.clone();
+        let result = save_params(&path, &self.params)
+            .map(|()| format!("{CONFIG_NAME} saved into {}", path.display()));
+        if result.is_ok() && self.called_from_app {
+            println!("{}", self.params.to_json());
+        }
+        let ok = result.is_ok();
+        self.save_status = Some(result);
+        ok
+    }
 }
 
 impl eframe::App for OptimizerApp {
@@ -629,6 +596,58 @@ impl eframe::App for OptimizerApp {
                 });
             });
         });
+        if self.stack.is_some() {
+            egui::Panel::bottom("actions").show(ui, |ui| {
+                let ready = self.recon_job.is_none();
+                ui.add_space(6.0);
+                ui.horizontal(|ui| {
+                    let save = egui::Button::new(
+                        RichText::new("💾 Save the parameters into the HDF5")
+                            .size(16.0)
+                            .strong()
+                            .color(Color32::WHITE),
+                    )
+                    .fill(Color32::from_rgb(46, 125, 50))
+                    .min_size(egui::vec2(0.0, 36.0));
+                    if ui
+                        .add_enabled(ready, save)
+                        .on_hover_text(
+                            "writes astra_fbp_config into the checkpoint so later \
+                             reconstructions use these parameters",
+                        )
+                        .clicked()
+                    {
+                        self.save_params_and_report();
+                    }
+                    let ret = egui::Button::new(
+                        RichText::new("↩ Return to the main application")
+                            .size(16.0)
+                            .strong()
+                            .color(Color32::WHITE),
+                    )
+                    .fill(Color32::from_rgb(21, 101, 192))
+                    .min_size(egui::vec2(0.0, 36.0));
+                    if ui
+                        .add_enabled(ready, ret)
+                        .on_hover_text("saves the parameters into the HDF5 and closes this tool")
+                        .clicked()
+                        && self.save_params_and_report()
+                    {
+                        ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close);
+                    }
+                    match &self.save_status {
+                        Some(Ok(msg)) => {
+                            ui.colored_label(Color32::from_rgb(120, 200, 120), msg);
+                        }
+                        Some(Err(e)) => {
+                            ui.colored_label(Color32::LIGHT_RED, e);
+                        }
+                        None => {}
+                    }
+                });
+                ui.add_space(6.0);
+            });
+        }
         egui::CentralPanel::default().show(ui, |ui| {
             if self.load_job.is_some() {
                 ui.horizontal(|ui| {
