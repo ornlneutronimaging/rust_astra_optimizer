@@ -307,7 +307,7 @@ impl OptimizerApp {
                         }
                     });
                     if let Some(e) = &self.advanced_error {
-                        ui.colored_label(Color32::LIGHT_RED, e);
+                        ui.colored_label(ui.visuals().error_fg_color, e);
                     }
                     return;
                 }
@@ -425,7 +425,7 @@ impl OptimizerApp {
             }
         });
         if let Some(e) = &self.recon_error {
-            ui.colored_label(Color32::LIGHT_RED, e);
+            ui.colored_label(ui.visuals().error_fg_color, e);
         }
 
         if let (Some((rh, rw, .., seconds)), Some((top_tex, bottom_tex))) =
@@ -593,6 +593,8 @@ impl eframe::App for OptimizerApp {
                     for tex in logos.iter() {
                         ui.add(egui::Image::from_texture(tex).max_height(LOGO_MAX_HEIGHT));
                     }
+                    ui.separator();
+                    crate::theme::toggle_button(ui);
                 });
             });
         });
@@ -637,10 +639,17 @@ impl eframe::App for OptimizerApp {
                     }
                     match &self.save_status {
                         Some(Ok(msg)) => {
-                            ui.colored_label(Color32::from_rgb(120, 200, 120), msg);
+                            // The pale green is only legible on the dark background;
+                            // the light theme needs a deeper one.
+                            let ok_color = if ui.visuals().dark_mode {
+                                Color32::from_rgb(120, 200, 120)
+                            } else {
+                                Color32::from_rgb(27, 118, 51)
+                            };
+                            ui.colored_label(ok_color, msg);
                         }
                         Some(Err(e)) => {
-                            ui.colored_label(Color32::LIGHT_RED, e);
+                            ui.colored_label(ui.visuals().error_fg_color, e);
                         }
                         None => {}
                     }
@@ -657,7 +666,7 @@ impl eframe::App for OptimizerApp {
                 return;
             }
             if let Some(e) = &self.load_error {
-                ui.colored_label(Color32::LIGHT_RED, e);
+                ui.colored_label(ui.visuals().error_fg_color, e);
             }
             if self.stack.is_none() {
                 return;

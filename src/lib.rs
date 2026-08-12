@@ -3,3 +3,4 @@
 
 pub mod app;
 pub mod recon;
+pub mod theme;
