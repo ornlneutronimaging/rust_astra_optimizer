@@ -52,6 +52,8 @@ fn main() -> eframe::Result<()> {
         native_options,
         Box::new(move |cc| {
             cc.egui_ctx.set_theme(astra_optimizer::theme::load());
+            cc.egui_ctx
+                .set_zoom_factor(astra_optimizer::zoom::load());
             Ok(Box::new(OptimizerApp::new(input, called_from_app)))
         }),
     )
