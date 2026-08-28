@@ -10,6 +10,9 @@ eframe = "0.35"
 egui = "0.35"
 hdf5-metno = "0.10"
 image = { version = "0.25", default-features = false, features = ["png"] }
-rfd = "0.17"
+# gtk3 backend (not the default xdg-portal one): ct_reconstruction (a path
+# dependency) already selects it, and cargo refuses to build with both
+# backends enabled at once.
+rfd = { version = "0.17", default-features = false, features = ["gtk3"] }
 serde_json = "1.0"
 sha2 = "0.10"
