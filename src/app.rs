@@ -6,8 +6,8 @@ use crate::recon::{
     AstraMethod, AstraParams, CONFIG_NAME, FILTERS, ReconJob, TEST_REBIN_FACTORS,
     checkpoint_geometry, max_test_rebin, save_params, tilt_tool_records,
 };
-use ct_reconstruction::combine::{LoadJob, LoadedStack};
-use ct_reconstruction::rebin::rebinned_size;
+use nectar::combine::{LoadJob, LoadedStack};
+use nectar::rebin::rebinned_size;
 use egui::{Color32, RichText};
 use sha2::{Digest, Sha256};
 use std::path::PathBuf;

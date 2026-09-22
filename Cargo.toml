@@ -5,7 +5,7 @@ edition = "2024"
 description = "Tune ASTRA reconstruction parameters on two test slices of a pre-processed CT stack, then save them into the checkpoint HDF5"
 
 [dependencies]
-ct_reconstruction = { path = "../rust_ct_reconstruction" }
+nectar = { path = "../rust_ct_reconstruction" }
 eframe = "0.35"
 egui = "0.35"
 hdf5-metno = "0.10"

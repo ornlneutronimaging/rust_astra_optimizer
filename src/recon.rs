@@ -3,9 +3,9 @@
 //! `all_ct_reconstruction_development` pixi environment), and saving the
 //! parameters back into the checkpoint HDF5.
 
-use ct_reconstruction::combine::{LoadedStack, Projection};
-use ct_reconstruction::crop::{read_npy, write_npy};
-use ct_reconstruction::rebin::{rebin_center, rebin_projection, rebinned_size};
+use nectar::combine::{LoadedStack, Projection};
+use nectar::crop::{read_npy, write_npy};
+use nectar::rebin::{rebin_center, rebin_projection, rebinned_size};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::mpsc::{Receiver, channel};
